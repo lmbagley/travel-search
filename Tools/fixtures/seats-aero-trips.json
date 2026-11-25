@@ -1,0 +1,250 @@
+{
+  "booking_links": [
+    {
+      "label": "Book via Alaska Atmos Rewards",
+      "link": "https://www.alaskaair.com/search/results?O=SFO&D=NRT&OD=2027-02-01&A=1&C=0&L=0&RT=false&ShoppingMethod=onlineaward&utm_source=seatsaero",
+      "primary": true
+    },
+    {
+      "label": "Book via American AAdvantage",
+      "link": "https://www.aa.com/booking/search?type=OneWay&searchType=Award&from=SFO&to=NRT&pax=1&cabin=&locale=en_US&nearbyAirports=true&depart=2027-02-01&carriers=ALL&pos=US&adult=1&utm_source=seatsaero",
+      "primary": false
+    }
+  ],
+  "data": [
+    {
+      "ID": "3LWo7G6xg5OcmWQyj1zqHaB2ktV",
+      "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+      "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+      "AvailabilitySegments": [
+        {
+          "ID": "3LWo7FULzKc788UVHTpvrCv4DJO",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3LWo7G6xg5OcmWQyj1zqHaB2ktV",
+          "FlightNumber": "AS68",
+          "Distance": 679,
+          "Duration": 135,
+          "FareClass": "I",
+          "AircraftName": "Boeing 737-800",
+          "AircraftCode": "73H",
+          "OriginAirport": "SFO",
+          "DestinationAirport": "SEA",
+          "DepartsAt": "2027-02-01T07:00:00Z",
+          "ArrivesAt": "2027-02-01T09:15:00Z",
+          "CreatedAt": "2026-11-02T00:23:33.277299Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "first",
+          "Order": 0
+        },
+        {
+          "ID": "3LWo7DZcPk20gbbQdj1b5IxBcB3",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3LWo7G6xg5OcmWQyj1zqHaB2ktV",
+          "FlightNumber": "AS123",
+          "Distance": 4762,
+          "Duration": 625,
+          "FareClass": "I",
+          "AircraftName": "Boeing 787-9",
+          "AircraftCode": "789",
+          "OriginAirport": "SEA",
+          "DestinationAirport": "NRT",
+          "DepartsAt": "2027-02-01T12:00:00Z",
+          "ArrivesAt": "2027-02-02T15:25:00Z",
+          "CreatedAt": "2026-11-02T00:23:33.277299Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "business",
+          "Order": 1
+        }
+      ],
+      "TotalDuration": 925,
+      "Stops": 1,
+      "Carriers": "AS",
+      "RemainingSeats": 9,
+      "MileageCost": 150000,
+      "TotalTaxes": 560,
+      "TaxesCurrency": "USD",
+      "TaxesCurrencySymbol": "$",
+      "TotalSegmentDistance": 5441,
+      "OriginAirport": "SFO",
+      "DestinationAirport": "NRT",
+      "Connections": [
+        "SEA"
+      ],
+      "Aircraft": [
+        "Boeing 737-800",
+        "Boeing 787-9"
+      ],
+      "FareClasses": [
+        "I",
+        "I"
+      ],
+      "FlightNumbers": "AS68, AS123",
+      "DepartsAt": "2027-02-01T07:00:00Z",
+      "Cabin": "business",
+      "ArrivesAt": "2027-02-02T15:25:00Z",
+      "CreatedAt": "2026-11-02T00:23:33.277299Z",
+      "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+      "Source": "alaska"
+    },
+    {
+      "ID": "3JX8dcTGNZLJKKKdFbtSjaP9ARc",
+      "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+      "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+      "AvailabilitySegments": [
+        {
+          "ID": "3JX8daSiHuVB500OnJSjIEsc9a2",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3JX8dcTGNZLJKKKdFbtSjaP9ARc",
+          "FlightNumber": "AS412",
+          "Distance": 338,
+          "Duration": 96,
+          "FareClass": "T",
+          "AircraftName": "Boeing 737-900",
+          "AircraftCode": "73J",
+          "OriginAirport": "SFO",
+          "DestinationAirport": "LAX",
+          "DepartsAt": "2027-02-01T08:40:00Z",
+          "ArrivesAt": "2027-02-01T10:16:00Z",
+          "CreatedAt": "2026-09-19T05:35:40.793777Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "economy",
+          "Order": 0
+        },
+        {
+          "ID": "3JX8dZkX2DiTupF1hMrSiwIG1gf",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3JX8dcTGNZLJKKKdFbtSjaP9ARc",
+          "FlightNumber": "JL61",
+          "Distance": 5444,
+          "Duration": 705,
+          "FareClass": "T",
+          "AircraftName": "Boeing 787-9",
+          "AircraftCode": "789",
+          "OriginAirport": "LAX",
+          "DestinationAirport": "NRT",
+          "DepartsAt": "2027-02-01T11:55:00Z",
+          "ArrivesAt": "2027-02-02T16:40:00Z",
+          "CreatedAt": "2026-09-19T05:35:40.793777Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "economy",
+          "Order": 1
+        }
+      ],
+      "TotalDuration": 900,
+      "Stops": 1,
+      "Carriers": "AS, JL",
+      "RemainingSeats": 9,
+      "MileageCost": 37500,
+      "TotalTaxes": 2560,
+      "TaxesCurrency": "USD",
+      "TaxesCurrencySymbol": "$",
+      "TotalSegmentDistance": 5782,
+      "OriginAirport": "SFO",
+      "DestinationAirport": "NRT",
+      "Connections": [
+        "LAX"
+      ],
+      "Aircraft": [
+        "Boeing 737-900",
+        "Boeing 787-9"
+      ],
+      "FareClasses": [
+        "T",
+        "T"
+      ],
+      "FlightNumbers": "AS412, JL61",
+      "DepartsAt": "2027-02-01T08:40:00Z",
+      "Cabin": "economy",
+      "ArrivesAt": "2027-02-02T16:40:00Z",
+      "CreatedAt": "2026-09-19T05:35:40.793777Z",
+      "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+      "Source": "alaska"
+    },
+    {
+      "ID": "3LU5gGROdOSTUaRdVrtBO9xK2gQ",
+      "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+      "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+      "AvailabilitySegments": [
+        {
+          "ID": "3LU5gNO5fkdG3LE7o233dcErkYm",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3LU5gGROdOSTUaRdVrtBO9xK2gQ",
+          "FlightNumber": "AS308",
+          "Distance": 338,
+          "Duration": 87,
+          "FareClass": "T",
+          "AircraftName": "Boeing 737 MAX 8",
+          "AircraftCode": "7M8",
+          "OriginAirport": "SFO",
+          "DestinationAirport": "LAX",
+          "DepartsAt": "2027-02-01T15:58:00Z",
+          "ArrivesAt": "2027-02-01T17:25:00Z",
+          "CreatedAt": "2026-11-01T01:18:35.07861Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "economy",
+          "Order": 0
+        },
+        {
+          "ID": "3LU5gKn1DtPPmXMSVKaxkatMWEK",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "AvailabilityTripID": "3LU5gGROdOSTUaRdVrtBO9xK2gQ",
+          "FlightNumber": "JL61",
+          "Distance": 5444,
+          "Duration": 705,
+          "FareClass": "T",
+          "AircraftName": "Boeing 787-9",
+          "AircraftCode": "789",
+          "OriginAirport": "LAX",
+          "DestinationAirport": "NRT",
+          "DepartsAt": "2027-02-02T11:55:00Z",
+          "ArrivesAt": "2027-02-03T16:40:00Z",
+          "CreatedAt": "2026-11-01T01:18:35.07861Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska",
+          "Cabin": "economy",
+          "Order": 1
+        }
+      ],
+      "TotalDuration": 1902,
+      "Stops": 1,
+      "Carriers": "AS, JL",
+      "RemainingSeats": 9,
+      "MileageCost": 37500,
+      "TotalTaxes": 3120,
+      "TaxesCurrency": "USD",
+      "TaxesCurrencySymbol": "$",
+      "TotalSegmentDistance": 5782,
+      "OriginAirport": "SFO",
+      "DestinationAirport": "NRT",
+      "Connections": [
+        "LAX"
+      ],
+      "Aircraft": [
+        "Boeing 737 MAX 8",
+        "Boeing 787-9"
+      ],
+      "FareClasses": [
+        "T",
+        "T"
+      ],
+      "FlightNumbers": "AS308, JL61",
+      "DepartsAt": "2027-02-01T15:58:00Z",
+      "Cabin": "economy",
+      "ArrivesAt": "2027-02-03T16:40:00Z",
+      "CreatedAt": "2026-11-01T01:18:35.07861Z",
+      "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+      "Source": "alaska"
+    }
+  ]
+}

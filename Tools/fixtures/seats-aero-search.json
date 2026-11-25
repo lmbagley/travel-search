@@ -1,0 +1,254 @@
+{
+  "count": 10,
+  "hasMore": false,
+  "cursor": 1795462142,
+  "data": [
+    {
+      "ID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+      "Date": "2027-02-01",
+      "Source": "alaska",
+      "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+      "TaxesCurrency": "USD",
+      "JMileageCost": "1",
+      "JAirlines": "ZZ",
+      "JAvailable": true,
+      "AvailabilityTrips": [
+        {
+          "ID": "3LWo7G6xg5OcmWQyj1zqHaB2ktV",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39dotkXVlasFyVnUqbKX0YxoT8w",
+          "TotalDuration": 925,
+          "Stops": 1,
+          "Carriers": "AS",
+          "RemainingSeats": 9,
+          "MileageCost": 150000,
+          "TotalTaxes": 560,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 5441,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Connections": [
+            "SEA"
+          ],
+          "Aircraft": [
+            "Boeing 737-800",
+            "Boeing 787-9"
+          ],
+          "FareClasses": [
+            "I",
+            "I"
+          ],
+          "FlightNumbers": "AS68, AS123",
+          "DepartsAt": "2027-02-01T07:00:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-02T15:25:00Z",
+          "CreatedAt": "2026-11-02T00:23:33.277299Z",
+          "UpdatedAt": "2026-11-23T19:02:06.137712Z",
+          "Source": "alaska"
+        }
+      ]
+    },
+    {
+      "ID": "3KNtnBVF2sckTqHONiSdDwD0t4N",
+      "Date": "2027-02-01",
+      "Source": "emirates",
+      "UpdatedAt": "2026-11-23T07:35:25.263554Z",
+      "TaxesCurrency": "USD",
+      "JMileageCost": "1",
+      "JAirlines": "ZZ",
+      "JAvailable": true,
+      "AvailabilityTrips": [
+        {
+          "ID": "3KOHTDMEgdakcy12LokWhuXvUJv",
+          "RouteID": "3KNsRlFz7jmEohSmzwSVmjXB3PJ",
+          "AvailabilityID": "3KNtnBVF2sckTqHONiSdDwD0t4N",
+          "TotalDuration": 1960,
+          "Stops": 1,
+          "Carriers": "EK, EK",
+          "RemainingSeats": 7,
+          "MileageCost": 201000,
+          "TotalTaxes": 125400,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 13063,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Connections": [
+            "DXB"
+          ],
+          "Aircraft": [
+            "Airbus A380-800",
+            "Airbus A380-800"
+          ],
+          "FareClasses": [
+            "O",
+            "O"
+          ],
+          "FlightNumbers": "EK226, EK318",
+          "DepartsAt": "2027-02-01T15:40:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-03T17:20:00Z",
+          "CreatedAt": "2026-10-08T01:08:19.745413Z",
+          "UpdatedAt": "2026-11-23T07:35:25.263554Z",
+          "Source": "emirates"
+        },
+        {
+          "ID": "3KOHTBGYLxL8dISMieufYdXrQ09",
+          "RouteID": "3KNsRlFz7jmEohSmzwSVmjXB3PJ",
+          "AvailabilityID": "3KNtnBVF2sckTqHONiSdDwD0t4N",
+          "TotalDuration": 1710,
+          "Stops": 1,
+          "Carriers": "EK, EK",
+          "RemainingSeats": 7,
+          "MileageCost": 201000,
+          "TotalTaxes": 125400,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 13063,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Connections": [
+            "DXB"
+          ],
+          "Aircraft": [
+            "Airbus A380-800",
+            "Boeing 777-300ER"
+          ],
+          "FareClasses": [
+            "O",
+            "O"
+          ],
+          "FlightNumbers": "EK226, EK320",
+          "DepartsAt": "2027-02-01T15:40:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-03T13:10:00Z",
+          "CreatedAt": "2026-10-08T01:08:19.745413Z",
+          "UpdatedAt": "2026-11-23T07:35:25.263554Z",
+          "Source": "emirates"
+        }
+      ]
+    },
+    {
+      "ID": "3LOOym0H49qAHNQOPvLVN9eTFzZ",
+      "Date": "2027-02-01",
+      "Source": "jal",
+      "UpdatedAt": "2026-11-23T10:49:11.765884Z",
+      "TaxesCurrency": "USD",
+      "JMileageCost": "1",
+      "JAirlines": "ZZ",
+      "JAvailable": true,
+      "AvailabilityTrips": [
+        {
+          "ID": "3LOv7nio8sSV1pYA2AiIKkxn8VF",
+          "RouteID": "3KNX4HkcDj8KVsB1m1fp0QZzn3T",
+          "AvailabilityID": "3LOOym0H49qAHNQOPvLVN9eTFzZ",
+          "TotalDuration": 670,
+          "Stops": 0,
+          "Carriers": "JL",
+          "RemainingSeats": 4,
+          "MileageCost": 130000,
+          "TotalTaxes": 41400,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 5117,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Aircraft": [
+            "Boeing 787-9"
+          ],
+          "FareClasses": [
+            "D"
+          ],
+          "FlightNumbers": "JL57",
+          "DepartsAt": "2027-02-01T11:50:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-02T16:00:00Z",
+          "CreatedAt": "2026-10-30T05:22:43.021727Z",
+          "UpdatedAt": "2026-11-23T10:49:11.765884Z",
+          "Source": "jal"
+        }
+      ]
+    },
+    {
+      "ID": "39gsNidKAToUDnjnqblPKbxIdMs",
+      "Date": "2027-02-02",
+      "Source": "alaska",
+      "UpdatedAt": "2026-11-23T17:10:52.165334Z",
+      "TaxesCurrency": "USD",
+      "JMileageCost": "1",
+      "JAirlines": "ZZ",
+      "JAvailable": true,
+      "AvailabilityTrips": [
+        {
+          "ID": "3LWQDzKgSmJ61lA9zK4zTz0Jml6",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39gsNidKAToUDnjnqblPKbxIdMs",
+          "TotalDuration": 2145,
+          "Stops": 1,
+          "Carriers": "AS",
+          "RemainingSeats": 9,
+          "MileageCost": 150000,
+          "TotalTaxes": 1120,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 5441,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Connections": [
+            "SEA"
+          ],
+          "Aircraft": [
+            "Boeing 737 MAX 8",
+            "Boeing 787-9"
+          ],
+          "FareClasses": [
+            "I",
+            "I"
+          ],
+          "FlightNumbers": "AS580, AS123",
+          "DepartsAt": "2027-02-02T10:40:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-04T15:25:00Z",
+          "CreatedAt": "2026-11-01T21:07:08.427858Z",
+          "UpdatedAt": "2026-11-23T17:10:52.165334Z",
+          "Source": "alaska"
+        },
+        {
+          "ID": "3LWQE20yshURcG7H1QM2MIG1L4v",
+          "RouteID": "2QdDZnc7BpPnQGAt6xyn4UtEI4E",
+          "AvailabilityID": "39gsNidKAToUDnjnqblPKbxIdMs",
+          "TotalDuration": 2012,
+          "Stops": 1,
+          "Carriers": "AS",
+          "RemainingSeats": 3,
+          "MileageCost": 150000,
+          "TotalTaxes": 1120,
+          "TaxesCurrency": "USD",
+          "TaxesCurrencySymbol": "$",
+          "TotalSegmentDistance": 5441,
+          "OriginAirport": "SFO",
+          "DestinationAirport": "NRT",
+          "Connections": [
+            "SEA"
+          ],
+          "Aircraft": [
+            "Boeing 737-900",
+            "Boeing 787-9"
+          ],
+          "FareClasses": [
+            "I",
+            "I"
+          ],
+          "FlightNumbers": "AS264, AS123",
+          "DepartsAt": "2027-02-02T12:53:00Z",
+          "Cabin": "business",
+          "ArrivesAt": "2027-02-04T15:25:00Z",
+          "CreatedAt": "2026-11-01T21:07:08.427858Z",
+          "UpdatedAt": "2026-11-23T17:10:52.165334Z",
+          "Source": "alaska"
+        }
+      ]
+    }
+  ]
+}

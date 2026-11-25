@@ -1,0 +1,15 @@
+{
+  "name": "travel-search",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Least-painful flight ranking and seats.aero award search, packaged as a PAI/LifeOS skill.",
+  "scripts": {
+    "test": "bun test Tools",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.3",
+    "typescript": "5.9.3"
+  }
+}

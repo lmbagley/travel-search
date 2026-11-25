@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.DS_Store
+._*
+# your real config and keys never belong here
+config.yaml
+*-key
+*.token

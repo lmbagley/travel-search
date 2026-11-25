@@ -1,0 +1,12 @@
+# travel-search seat monitor — one pass. Copy both files to ~/.config/systemd/user/,
+# then: systemctl --user daemon-reload && systemctl --user enable --now travel-search-monitor.timer
+#
+# PATH must include the directory your browser driver lives in. A unit that cannot find
+# it fails every check with "Executable not found in $PATH"; add yours below if needed.
+[Unit]
+Description=travel-search seat monitor (one pass)
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env bun %h/.claude/skills/TravelSearch/Tools/travel.ts monitor run

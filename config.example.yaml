@@ -1,0 +1,168 @@
+# travel-search configuration — the ONE place your preferences live.
+#
+# Copy to ~/.config/travel-search/config.yaml (or set TRAVEL_SEARCH_CONFIG) and edit.
+# `bun install.ts` does the copy for you, and never overwrites an existing file.
+#
+# Every value below is an EXAMPLE. The tool refuses to run without this file, because
+# ranking flights against somebody else's preferences is worse than not ranking at all.
+# Secrets never go in this file — only references to where they live.
+
+traveler:
+  name: Example Traveler
+  home_airports: [ORD]
+  programs:
+    - airline: UA
+      status: "1K" # optional; informational only
+
+defaults:
+  # Your loyalty-program airline. The "Prog" column marks itineraries that are
+  # mainline-only AND marketed by this airline (useful for status credit).
+  airline: UA
+  cabin: economy
+  # Regional metal (operated by a regional partner) is penalised, not banned.
+  prefer_mainline: true
+
+# "Least painful" made mechanical.
+#   hard   -> reject outright
+#   scored -> rank whatever survives (each rule is a 0..1 fit times its weight)
+painfulness:
+  hard:
+    # A redeye is anything that departs into, or lands out of, this window.
+    no_redeye: true
+    redeye_window: { start: "23:00", end: "05:00" }
+    # Reject anything that lands on a later calendar day than it left.
+    # Turn this OFF for long-haul and award searches, where next-day arrival is normal.
+    reject_overnight_arrival: true
+    depart_not_before: "06:30"
+    arrive_not_after: "22:00"
+    # Never a minimum-legal connection. Raise the floor at hubs where tight
+    # connections actually bite (long walks, terminal changes, frequent delays).
+    min_connection_minutes: 60
+    min_connection_minutes_by_airport:
+      ORD: 75
+      DFW: 75
+      EWR: 75
+
+  scored:
+    # Preferred arrival window. earlier_gradient (0..1) makes earlier in-window
+    # arrivals outrank later ones; 0 = every in-window arrival scores the same.
+    arrival_window: { start: "13:00", end: "19:00", weight: 30, earlier_gradient: 0 }
+    # A comfortable connection: long enough to walk and eat, not a wasted afternoon.
+    connection_sweet: { min_minutes: 75, max_minutes: 165, weight: 25 }
+    # Mainline aircraft: real exit rows, bigger cabin.
+    mainline_metal: { weight: 20 }
+    # A civilised departure time.
+    departure_window: { start: "07:00", end: "11:30", weight: 15 }
+    # Shortest trip — tie-breaker only. Fastest is often the one landing at midnight.
+    total_duration: { weight: 10 }
+
+seating:
+  # Your seat ladder, best first. Rungs: exit_row_aisle, exit_row_window,
+  # extra_legroom_aisle, extra_legroom_window, aisle, window. A seat on no rung is
+  # "off your ladder" and a flight with no bookable rung seat is flagged.
+  preference_order: [exit_row_aisle, exit_row_window, extra_legroom_aisle, extra_legroom_window]
+  # Inside the extra-legroom rungs, put bulkhead rows first.
+  extra_legroom_bulkhead_preferred: true
+  want_open_middle: true
+  # The tool reports aircraft type and NEVER guesses row numbers or occupancy.
+  never_guess_rows: true
+
+# Which rows are exit rows, extra-legroom rows and bulkheads, per airline and aircraft
+# code (the code your seat-map source prints). This is DATA you fill from a source you
+# can cite (a seat-map site, the airline's own seat page) and check by eye. Nothing is
+# guessed: an aircraft with no entry shows "exit rows UNKNOWN" and no seat climbs your
+# ladder on it. The rows below are EXAMPLES, not real data.
+seat_data:
+  UA:
+    "739": { exit_rows: [20, 21], extra_legroom_rows: [7, 8, 9, 20, 21], bulkhead_rows: [7], source: "EXAMPLE — replace" }
+
+# IANA time zone for each airport you fly through. Needed to measure trip length and
+# connections across zones; an airport missing here is reported, never guessed.
+airport_tz:
+  ORD: America/Chicago
+  DEN: America/Denver
+  SFO: America/Los_Angeles
+  EWR: America/New_York
+
+# A rough upgrade estimate shown by 'decide': open premium seats plus premium fare-class
+# depth, discounted at elite-heavy hubs and scaled by your status. Opinions to tune.
+# Delete this block to hide the estimate.
+upgrade_estimate:
+  premium_buckets:
+    UA: [F, A, J, C, D, Z, P]
+  weights:
+    open_premium_seats: 3 # per open seat on the premium-cabin seat map
+    premium_bucket_sum: 1 # per seat of premium fare-class depth
+  hub_factor: # below 1 = more elites competing for the same seat
+    ORD: 0.7
+    default: 1.0
+  tier_factor: # keyed by traveler.programs[].status
+    "1K": 1.0
+    default: 0.6
+  labels: { high: 20, medium: 8 }
+
+sources:
+  schedule:
+    provider: google_flights
+    # A real-browser CLI with `open <url>` and `read --tab <id>` (see README).
+    # PAI/LifeOS users: the Interceptor skill provides `interceptor`.
+    driver_cmd: interceptor
+    # Optional default airline filter for `search` (Google Flights airline name).
+    # airline_name: United
+    pacing_ms: 4000
+    jitter_ms: 1500
+
+  award:
+    provider: seats_aero
+    enabled: true
+    # Where your seats.aero Pro API key lives. Pick ONE form:
+    #   env:SEATS_AERO_API_KEY              an environment variable
+    #   ~/.config/travel-search/seats-aero-key   a file (chmod 600)
+    #   op://<vault>/<item>/<field>  1Password CLI reference
+    # $SEATS_AERO_API_KEY, when set, always wins.
+    api_key: ~/.config/travel-search/seats-aero-key
+    # Hard bound on API calls per search (each page is one call; 1,000 calls/day on Pro).
+    max_pages: 5
+    page_size: 500
+    # `--sort pain` needs leg times, which cost one extra call per availability record.
+    detail_calls: 10
+    # Rows older than this are flagged STALE. Cached award data ranges from minutes to weeks old.
+    stale_after_hours: 48
+
+  pricing:
+    # Cabins 'decide' prices on Google Flights. Economy also brings the fare ladder.
+    cabins: [economy, first]
+
+  seatmap:
+    # This tool ships no seat-map reader. A seat-map source is a plug-in module you
+    # install separately (README "Seat-map plug-ins"). Leave disabled without one.
+    enabled: false
+    # module: ~/src/my-seatmap-plugin/provider.ts
+    # Passed to the plug-in untouched; see its own README.
+    options: {}
+    # Cabin letters 'decide' reads: coach for seats you could sit in, premium for upgrades.
+    cabins: [Y, F]
+    economy_cabin: Y
+    premium_cabin: F
+    top_n: 4 # best itineraries that get seat maps in 'decide'
+    max_fetches: 16 # hard cap on seat-map reads per run
+
+# Seat monitor: 'travel.ts monitor run' on a timer (systemd/ in the repo) re-reads the
+# seat map of each flight you list and posts to Discord when a seat higher on your
+# ladder opens. Checks tighten as departure nears. Needs a seat-map plug-in.
+monitor:
+  # A REFERENCE to your Discord webhook URL, never the URL itself:
+  #   env:NAME | op://<vault>/<item>/<field> | a file path (chmod 600)
+  discord_webhook: ~/.config/travel-search/discord-webhook
+  cadence: { far_hours: 48, hot_hours: 26, far_every_min: 240, near_every_min: 60, hot_every_min: 25 }
+  failure_alert_after: 3 # alert once when a watch fails this many times in a row
+  # One entry per flight you hold a seat on. depart_time (HH:MM local) is optional and
+  # defaults to 23:59, so a flight is never marked departed early on its own day.
+  # watches:
+  #   - { airline: UA, flightNumber: "1234", origin: ORD, destination: DEN, date: 2027-03-10, current_seat: 14C, depart_time: "07:25" }
+  watches: []
+
+output:
+  currency: USD
+  # Column header for the program-airline mainline flag (max 4 chars).
+  loyalty_label: Prog
