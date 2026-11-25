@@ -98,6 +98,23 @@ describe("seat-map checks", () => {
     expect(() => checkSeatMap({ request: REQ, aircraftName: "x", seats: [{ id: "5A", state: "available", x: 1 }] }, REQ, "t")).toThrow(/aircraftCode/);
   });
 
+  test("a short row keeps its columns: a missing F seat does not make E a window (live A321, 2026-11-24)", () => {
+    const seats = [
+      ...["9", "11"].flatMap((r) => "ABCDEF".split("").map((l) => ({ id: `${r}${l}`, state: "occupied", x: X[l]! }))),
+      ...("ABCDE".split("").map((l) => ({ id: `10${l}`, state: "available", x: X[l]! }))),
+    ];
+    const m = checkSeatMap({ request: REQ, aircraftName: "x", aircraftCode: "321", seats }, REQ, "t");
+    const pos = Object.fromEntries(m.seats.map((s) => [s.id, s.position]));
+    expect([pos["10A"], pos["10B"], pos["10C"], pos["10D"], pos["10E"]]).toEqual(["window", "middle", "aisle", "aisle", "middle"]);
+    for (const l of "ABCDEF") expect(new Set(m.seats.filter((s) => s.letter === l).map((s) => s.position)).size).toBe(1);
+  });
+
+  test("zero-padded seat ids are read as the airline prints them, and count as the same seat", () => {
+    const m = checkSeatMap({ request: REQ, aircraftName: "x", aircraftCode: "321", seats: [{ id: "08C", state: "available", x: 1 }, { id: "8D", state: "available", x: 9 }] }, REQ, "t");
+    expect(m.seats.map((s) => s.id)).toEqual(["8C", "8D"]);
+    expect(() => checkSeatMap({ request: REQ, aircraftName: "x", aircraftCode: "321", seats: [{ id: "08C", state: "available", x: 1 }, { id: "8C", state: "available", x: 1 }] }, REQ, "t")).toThrow(/8C appears twice/);
+  });
+
   test("derivePositions leaves given positions alone", () => {
     const seats: CheckedSeat[] = [{ id: "1A", row: 1, letter: "A", state: "available", position: "middle" }];
     derivePositions(seats, [{ id: "1A", state: "available", position: "middle" }]);

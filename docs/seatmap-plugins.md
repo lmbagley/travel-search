@@ -53,7 +53,7 @@ What you get in `ctx`:
 |---|---|
 | `apiVersion` | Must equal travel-search's `SEATMAP_API_VERSION`, or the plug-in is not loaded. |
 | `seats` | At least one. Every id like `12A`, no duplicates. State is exactly `available`, `occupied` or `blocked`. |
-| seat position | Give `position` (`window`/`aisle`/`middle`) or an `x` drawing coordinate; positions are derived from `x` per row. Twin-aisle cabins need `position`. |
+| seat position | Give `position` (`window`/`aisle`/`middle`) or an `x` drawing coordinate; positions are derived from `x` by column (each seat letter at its median `x` across the cabin), so a short row keeps its columns. Ids like `08A` are read as `8A`. Twin-aisle cabins need `position`. |
 | `aircraftCode` | Required. It keys `seat_data` in the user's config, so print it the way the source does. |
 | availability | Dates `YYYY-MM-DD`, times `HH:MM` 24h local, fare-class counts 0–9, and `complete: false` only with a `note` saying why. |
 

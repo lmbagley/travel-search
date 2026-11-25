@@ -130,9 +130,10 @@ export function checkSeatMap(raw: unknown, req: SeatMapRequest, source: string):
   const seen = new Set<string>();
   const seats: CheckedSeat[] = [];
   for (const s of m.seats as ProviderSeat[]) {
-    const id = typeof s?.id === "string" ? s.id.trim().toUpperCase() : "";
-    const mm = id.match(SEAT_ID);
+    const printed = typeof s?.id === "string" ? s.id.trim().toUpperCase() : "";
+    const mm = printed.match(SEAT_ID);
     if (!mm) throw new Error(`${where}: bad seat id ${JSON.stringify(s?.id)}`);
+    const id = `${Number(mm[1])}${mm[2]}`; // "08A" and "8A" are one seat; airlines print "8A"
     if (seen.has(id)) throw new Error(`${where}: seat ${id} appears twice`);
     seen.add(id);
     if (!SEAT_STATES.includes(s.state)) {
@@ -157,39 +158,42 @@ export function checkSeatMap(raw: unknown, req: SeatMapRequest, source: string):
 }
 
 /**
- * Fill in position for seats the provider left blank, from drawing geometry: in each row
- * the outermost seats are windows and the two seats beside the widest gap are aisles.
- * Measuring the drawing, not assuming a layout, handles 3-3, 2-2 and 2-3 alike. (A
- * twin-aisle row needs the provider to send positions; one gap is all this derives.)
+ * Fill in position for seats the provider left blank, from drawing geometry, by COLUMN:
+ * each seat letter sits at its median x across the cabin, the outermost columns are
+ * windows and the two columns beside the widest gap are aisles. Working row by row would
+ * call the last seat of a short row (one missing for an exit or galley) a window. Measuring
+ * the drawing, not assuming a layout, handles 3-3, 2-2 and 2-3 alike. (A twin-aisle cabin
+ * needs the provider to send positions; one gap is all this derives.)
  */
 export function derivePositions(seats: CheckedSeat[], raw: ProviderSeat[]): void {
-  const given = new Set(raw.filter((s) => s.position !== undefined).map((s) => s.id.trim().toUpperCase()));
-  const byRow = new Map<number, CheckedSeat[]>();
-  for (const s of seats) {
-    if (given.has(s.id)) continue;
-    const list = byRow.get(s.row) ?? [];
-    list.push(s);
-    byRow.set(s.row, list);
-  }
-  for (const list of byRow.values()) {
-    list.sort((a, b) => a.x! - b.x!);
-    if (list.length === 1) {
-      list[0]!.position = "window";
-      continue;
+  const norm = (id: string) => {
+    const m = id.trim().toUpperCase().match(SEAT_ID);
+    return m ? `${Number(m[1])}${m[2]}` : id;
+  };
+  const given = new Set(raw.filter((s) => s.position !== undefined).map((s) => norm(s.id)));
+  const todo = seats.filter((s) => !given.has(s.id));
+  if (!todo.length) return;
+  const xs = new Map<string, number[]>();
+  for (const s of todo) xs.set(s.letter, [...(xs.get(s.letter) ?? []), s.x!]);
+  const median = (v: number[]) => {
+    const o = [...v].sort((p, q) => p - q);
+    return o.length % 2 ? o[(o.length - 1) / 2]! : (o[o.length / 2 - 1]! + o[o.length / 2]!) / 2;
+  };
+  const cols = [...xs.entries()].map(([letter, v]) => ({ letter, x: median(v) })).sort((p, q) => p.x - q.x);
+  let gapIdx = -1;
+  let gapSize = -1;
+  for (let i = 0; i + 1 < cols.length; i++) {
+    const gap = cols[i + 1]!.x - cols[i]!.x;
+    if (gap > gapSize) {
+      gapSize = gap;
+      gapIdx = i;
     }
-    let gapIdx = -1;
-    let gapSize = -1;
-    for (let i = 0; i + 1 < list.length; i++) {
-      const gap = list[i + 1]!.x! - list[i]!.x!;
-      if (gap > gapSize) {
-        gapSize = gap;
-        gapIdx = i;
-      }
-    }
-    list.forEach((s, i) => {
-      s.position = i === 0 || i === list.length - 1 ? "window" : i === gapIdx || i === gapIdx + 1 ? "aisle" : "middle";
-    });
   }
+  const pos = new Map<string, SeatPosition>();
+  cols.forEach((c, i) => {
+    pos.set(c.letter, i === 0 || i === cols.length - 1 ? "window" : i === gapIdx || i === gapIdx + 1 ? "aisle" : "middle");
+  });
+  for (const s of todo) s.position = pos.get(s.letter)!;
 }
 
 // ───────────────────────────── availability ─────────────────────────────
