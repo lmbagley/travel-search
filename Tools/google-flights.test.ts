@@ -218,8 +218,6 @@ describe("search pacing", () => {
     const { mkdtempSync, writeFileSync, readFileSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
-    const { recordRequest } = await import("./browser.ts");
-    const { collectGoogleFlights } = await import("./google-flights.ts");
     const dir = mkdtempSync(join(tmpdir(), "ts-gpace-"));
     const log = join(dir, "opens.log");
     const fake = join(dir, "fake-driver.ts");
@@ -227,21 +225,21 @@ describe("search pacing", () => {
     writeFileSync(fake, `const [cmd] = process.argv.slice(2);
 if (cmd === "open") { require("node:fs").appendFileSync(${JSON.stringify(log)}, Date.now() + "\\n"); console.log(JSON.stringify({ tabId: 7 })); }
 else { console.error("no page"); process.exit(1); }`);
-    const prev = process.env.XDG_STATE_HOME;
-    process.env.XDG_STATE_HOME = dir;
-    try {
+    // Its own process: the search takes the browser lock for the life of the process.
+    const cfg: Config = {
+      ...CFG,
+      sources: { ...CFG.sources, schedule: { driver_cmd: `bun ${fake}`, pacing_ms: 1500, jitter_ms: 0, settle_ms: 0, settle_jitter_ms: 0 } },
+    };
+    const run = Bun.spawnSync(["bun", "-e", `
+      import { recordRequest } from "${join(import.meta.dir, "browser.ts")}";
+      import { collectGoogleFlights } from "${join(import.meta.dir, "google-flights.ts")}";
       const last = Date.now();
       recordRequest("www.google.com", last); // another run just loaded Google
-      const cfg: Config = {
-        ...CFG,
-        sources: { ...CFG.sources, schedule: { driver_cmd: `bun ${fake}`, pacing_ms: 1500, jitter_ms: 0, settle_ms: 0, settle_jitter_ms: 0 } },
-      };
-      await collectGoogleFlights("SFO", "ORD", "2026-12-10", "AA", cfg).catch(() => {});
-      const opened = Number(readFileSync(log, "utf8").trim().split("\n")[0]);
-      expect(opened - last).toBeGreaterThanOrEqual(1400);
-    } finally {
-      if (prev === undefined) delete process.env.XDG_STATE_HOME;
-      else process.env.XDG_STATE_HOME = prev;
-    }
+      await collectGoogleFlights("SFO", "ORD", "2026-12-10", "AA", ${JSON.stringify(cfg)}).catch(() => {});
+      console.log("LAST " + last);`], { env: { ...process.env, XDG_STATE_HOME: dir } });
+    const last = Number(run.stdout.toString().match(/LAST (\d+)/)?.[1]);
+    const opened = Number(readFileSync(log, "utf8").trim().split("\n")[0]);
+    expect(last).toBeGreaterThan(0);
+    expect(opened - last).toBeGreaterThanOrEqual(1400);
   }, 30_000);
 });
