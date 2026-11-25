@@ -170,13 +170,17 @@ function readFileSafe(p: string): string {
 
 // ───────────────────────────── shared driver ─────────────────────────────
 
+/** Default gap between Google Flights page loads (sources.schedule overrides): 10-15 s. */
+export const GOOGLE_PACING_MS = 10_000;
+export const GOOGLE_JITTER_MS = 5_000;
+
 /** Build the one driver instance for this run. Default pacing comes from sources.schedule. */
 export function createBrowser(cfg: Config): BrowserDriver {
   const cmd = driverCommand(cfg);
   const sched = (cfg.sources?.schedule ?? {}) as Record<string, unknown>;
   const defaultPacing = {
-    pacingMs: typeof sched.pacing_ms === "number" ? sched.pacing_ms : 4000,
-    jitterMs: typeof sched.jitter_ms === "number" ? sched.jitter_ms : 1500,
+    pacingMs: typeof sched.pacing_ms === "number" ? sched.pacing_ms : GOOGLE_PACING_MS,
+    jitterMs: typeof sched.jitter_ms === "number" ? sched.jitter_ms : GOOGLE_JITTER_MS,
   };
   let count = 0;
 

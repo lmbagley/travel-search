@@ -20,8 +20,9 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { num, type Config, type Connection, type Itinerary } from "./painfulness.ts";
+import { googleFlightsSearchUrl } from "./google-url.ts";
 
-import { acquireBrowserLock, driverCommand, runDriver as driver } from "./browser.ts";
+import { acquireBrowserLock, driverCommand, GOOGLE_JITTER_MS, GOOGLE_PACING_MS, lastRequestAt, pacingWait, recordRequest, runDriver as driver } from "./browser.ts";
 
 export { driverCommand };
 
@@ -89,9 +90,18 @@ export function classifyZeroParse(
   };
 }
 
-export function googleFlightsUrl(origin: string, destination: string, isoDate: string, airlineName?: string): string {
-  const q = `Flights from ${origin} to ${destination} on ${isoDate} oneway${airlineName ? ` on ${airlineName}` : ""}`;
-  return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}`;
+/** "UA", "ua", "United" or "united" -> "UA". An unknown name is an error, never a guess. */
+export function airlineCode(nameOrCode: string): string {
+  const t = nameOrCode.trim();
+  if (/^[A-Za-z0-9]{2}$/.test(t)) return t.toUpperCase();
+  const hit = Object.entries(MARKETING_TO_IATA).find(([name]) => name.toLowerCase() === t.toLowerCase());
+  if (!hit) throw new Error(`unknown airline "${nameOrCode}": use its 2-letter code (e.g. AA, UA, DL)`);
+  return hit[1];
+}
+
+/** Structured Google Flights link (see google-url.ts): every flight listed, no English to parse. */
+export function googleFlightsUrl(origin: string, destination: string, isoDate: string, airline?: string, cabin = "economy"): string {
+  return googleFlightsSearchUrl({ origin, destination, date: isoDate, cabin, airlines: airline ? [airlineCode(airline)] : [] });
 }
 
 /**
@@ -106,12 +116,18 @@ export async function collectGoogleFlights(
   cfg: Config,
 ): Promise<CollectResult> {
   const sched = cfg.sources.schedule as Record<string, unknown>;
-  const pace = num(sched, "pacing_ms", 4000);
-  const jitter = num(sched, "jitter_ms", 1500);
+  const pace = num(sched, "pacing_ms", GOOGLE_PACING_MS);
+  const jitter = num(sched, "jitter_ms", GOOGLE_JITTER_MS);
   const cmd = driverCommand(cfg);
   await acquireBrowserLock();
 
-  const opened = await driver(cmd, ["open", googleFlightsUrl(origin, destination, isoDate, airlineName)]);
+  // Same per-site pacing as every other travel-search request, across runs.
+  const url = googleFlightsUrl(origin, destination, isoDate, airlineName);
+  const host = new URL(url).host;
+  const wait = pacingWait(lastRequestAt(host), pace + Math.floor(Math.random() * jitter));
+  if (wait > 0) await sleep(wait);
+  recordRequest(host);
+  const opened = await driver(cmd, ["open", url]);
   // A read that cannot be pinned to the tab we opened may drift to whichever tab last
   // loaded — in a round-trip search that is the PREVIOUS direction's results.
   let tabId: number | undefined;
@@ -127,7 +143,7 @@ export async function collectGoogleFlights(
         `Refusing an unpinned read; it can return a different tab's data as this route's.`,
     );
   }
-  await sleep(pace + Math.random() * jitter + 12_000);
+  await sleep(num(sched, "settle_ms", 12_000) + Math.random() * num(sched, "settle_jitter_ms", 3_000)); // let results render
 
   const readArgs = ["read", "--tab", String(tabId)];
 

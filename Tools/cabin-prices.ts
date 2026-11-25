@@ -1,15 +1,15 @@
 /**
  * cabin-prices.ts — headline prices per cabin from Google Flights.
  *
- * Google Flights takes a plain-English `q=` search ("ORD to DEN on 2027-02-01 one way
- * first class United"), which selects a cabin without building its binary URL format.
- * Its collapsed rows do not print flight numbers, so prices join to itineraries on
+ * The link is Google Flights' own structured search (google-url.ts) with the cabin set as
+ * a field and every flight listed, so nothing hides behind "View more flights".
+ * Its rows do not print flight numbers, so prices join to itineraries on
  * (departure time, arrival time). An itinerary with no matching row has no price for
  * that cabin and says "n/a"; nothing is filled in.
  */
 
 import type { BrowserDriver } from "./seatmap-api.ts";
-import { to24h } from "./google-flights.ts";
+import { googleFlightsUrl, to24h } from "./google-flights.ts";
 
 export interface CabinPrice {
   cabin: string; // "economy" | "premium" | "business" | "first"
@@ -21,11 +21,8 @@ export interface CabinPrice {
   raw: string; // the label this was parsed from
 }
 
-const GF_BASE = "https://www.google.com/travel/flights";
-
-export function cabinPriceUrl(origin: string, destination: string, isoDate: string, cabin: string, airlineName?: string): string {
-  const q = `${origin} to ${destination} on ${isoDate} one way ${cabin === "economy" ? "" : `${cabin} class `}${airlineName ?? ""}`;
-  return `${GF_BASE}?q=${encodeURIComponent(q.replace(/\s+/g, " ").trim())}&hl=en&curr=USD`;
+export function cabinPriceUrl(origin: string, destination: string, isoDate: string, cabin: string, airline?: string): string {
+  return googleFlightsUrl(origin, destination, isoDate, airline, cabin);
 }
 
 export async function fetchCabinPrices(
@@ -39,16 +36,11 @@ export async function fetchCabinPrices(
   onIncomplete: (why: string) => void = () => {},
 ): Promise<CabinPrice[]> {
   const tab = await browser.open(cabinPriceUrl(origin, destination, isoDate, cabin, airlineName));
-  let html = await browser.read(tab, (h) => /aria-label="[^"]*US dollars/.test(h) || /couldn(?:&#39;|')t find|No results/i.test(h), 60_000);
-  // Rows hide behind "View more flights", and the hidden one is often the one you want.
+  const html = await browser.read(tab, (h) => /aria-label="[^"]*US dollars/.test(h) || /couldn(?:&#39;|')t find|No results/i.test(h), 60_000);
+  // The link asks for every flight. If Google still collapsed the list, say so: rows left
+  // hidden would otherwise read as "no price". (Its expand button ignores scripted clicks.)
   if (/aria-label="View more flights"/.test(html)) {
-    try {
-      await browser.click(tab, 'button[aria-label="View more flights"]');
-      html = await browser.read(tab, (h) => !/aria-label="View more flights"/.test(h), 20_000);
-    } catch (e) {
-      // Not fatal: parse what rendered, but say so; rows left hidden would otherwise read as "no price".
-      onIncomplete(`could not open "View more flights" (${e instanceof Error ? e.message : String(e)}); only the first rows were priced`);
-    }
+    onIncomplete(`Google collapsed the ${cabin} list behind "View more flights"; only the rows shown were priced`);
   }
   const rows = parseCabinPriceRows(html);
   if (!rows.length) throw new Error(`Google Flights returned no parseable ${cabin} rows for ${origin}-${destination} ${isoDate}`);

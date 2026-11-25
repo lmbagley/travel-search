@@ -14,10 +14,12 @@ import {
   airportCode,
   classifyZeroParse,
   driverCommand,
+  airlineCode,
   googleFlightsUrl,
   parseGoogleFlightsAriaLabels,
   parseGoogleFlightsSummaries,
 } from "./google-flights.ts";
+import { ALL_FLIGHTS_TFU, base64url, tfsBytes } from "./google-url.ts";
 import { applyHardRules, rank, renderTable, type Config } from "./painfulness.ts";
 import { CFG } from "./test-helpers.ts";
 
@@ -176,8 +178,70 @@ describe("driver and URL", () => {
     const c: Config = { ...CFG, sources: { ...CFG.sources, schedule: { driver_cmd: "my-browser --profile x" } } };
     expect(driverCommand(c)).toEqual(["my-browser", "--profile", "x"]);
   });
-  test("airline filter is optional in the query", () => {
-    expect(decodeURIComponent(googleFlightsUrl("SEA", "JFK", "2027-01-05", "United"))).toContain("oneway on United");
-    expect(decodeURIComponent(googleFlightsUrl("SEA", "JFK", "2027-01-05"))).toMatch(/oneway$/);
+  test("the link is structured (no English for Google to misread) and asks for every flight", () => {
+    const u = new URL(googleFlightsUrl("SEA", "JFK", "2027-01-05", "United"));
+    expect(u.searchParams.has("q")).toBe(false);
+    expect(u.searchParams.get("tfu")).toBe(ALL_FLIGHTS_TFU);
+    const raw = Buffer.from(u.searchParams.get("tfs")!.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("latin1");
+    for (const part of ["2027-01-05", "SEA", "JFK", "UA"]) expect(raw).toContain(part);
+    // The airline filter is optional, and a name and its code give the same link.
+    expect(googleFlightsUrl("SEA", "JFK", "2027-01-05", "UA")).toBe(googleFlightsUrl("SEA", "JFK", "2027-01-05", "united"));
+    const none = Buffer.from(new URL(googleFlightsUrl("SEA", "JFK", "2027-01-05")).searchParams.get("tfs")!.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("latin1");
+    expect(none).not.toContain("UA");
   });
+
+  test("an airline name it does not know is an error, never a guess", () => {
+    expect(airlineCode("aa")).toBe("AA");
+    expect(() => airlineCode("Imaginary Air")).toThrow(/2-letter code/);
+  });
+
+  test("matches, byte for byte, the link Google itself wrote for this search (captured 2026-11-24)", () => {
+    expect(base64url(tfsBytes({ origin: "SFO", destination: "ORD", date: "2026-12-10", cabin: "economy", airlines: ["AA"] }))).toBe(
+      "CBwQAhoiEgoyMDI2LTEyLTEwMgJBQWoHCAESA1NGT3IHCAESA09SREABSAFwAYIBCwj___________8BmAEC",
+    );
+  });
+
+  test("each cabin sets its own seat field, and bad input is refused", () => {
+    const seat = (cabin: string) => tfsBytes({ origin: "SFO", destination: "ORD", date: "2026-12-10", cabin }).join(",");
+    const all = ["economy", "premium", "business", "first"].map(seat);
+    expect(new Set(all).size).toBe(4);
+    expect(seat("economy")).toContain([0x48, 1].join(",")); // field 9 = 1
+    expect(seat("first")).toContain([0x48, 4].join(",")); // field 9 = 4
+    expect(() => tfsBytes({ origin: "SFO", destination: "ORD", date: "2026-12-10", cabin: "steerage" })).toThrow(/unknown cabin/);
+    expect(() => tfsBytes({ origin: "sfo", destination: "ORD", date: "2026-12-10" })).toThrow(/3 capital letters/);
+    expect(() => tfsBytes({ origin: "SFO", destination: "ORD", date: "12/10/26" })).toThrow(/YYYY-MM-DD/);
+  });
+});
+
+describe("search pacing", () => {
+  test("a search waits out the last Google request from any run (live gap 2026-11-24)", async () => {
+    const { mkdtempSync, writeFileSync, readFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { recordRequest } = await import("./browser.ts");
+    const { collectGoogleFlights } = await import("./google-flights.ts");
+    const dir = mkdtempSync(join(tmpdir(), "ts-gpace-"));
+    const log = join(dir, "opens.log");
+    const fake = join(dir, "fake-driver.ts");
+    // open: record when it happened; read: fail at once (this test is only about the open).
+    writeFileSync(fake, `const [cmd] = process.argv.slice(2);
+if (cmd === "open") { require("node:fs").appendFileSync(${JSON.stringify(log)}, Date.now() + "\\n"); console.log(JSON.stringify({ tabId: 7 })); }
+else { console.error("no page"); process.exit(1); }`);
+    const prev = process.env.XDG_STATE_HOME;
+    process.env.XDG_STATE_HOME = dir;
+    try {
+      const last = Date.now();
+      recordRequest("www.google.com", last); // another run just loaded Google
+      const cfg: Config = {
+        ...CFG,
+        sources: { ...CFG.sources, schedule: { driver_cmd: `bun ${fake}`, pacing_ms: 1500, jitter_ms: 0, settle_ms: 0, settle_jitter_ms: 0 } },
+      };
+      await collectGoogleFlights("SFO", "ORD", "2026-12-10", "AA", cfg).catch(() => {});
+      const opened = Number(readFileSync(log, "utf8").trim().split("\n")[0]);
+      expect(opened - last).toBeGreaterThanOrEqual(1400);
+    } finally {
+      if (prev === undefined) delete process.env.XDG_STATE_HOME;
+      else process.env.XDG_STATE_HOME = prev;
+    }
+  }, 30_000);
 });

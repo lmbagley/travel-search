@@ -107,8 +107,8 @@ sources:
     driver_cmd: interceptor
     # Optional default airline filter for `search` (Google Flights airline name).
     # airline_name: United
-    pacing_ms: 4000
-    jitter_ms: 1500
+    pacing_ms: 10000
+    jitter_ms: 5000
 
   award:
     provider: seats_aero
