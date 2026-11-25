@@ -134,9 +134,14 @@ async function cmdPrice(rest: string[], cfg: Config) {
   const cabin = flag(rest, "--cabin") ?? "first";
   const name = flag(rest, "--airline") ?? str(cfg.sources?.schedule as Record<string, unknown>, "airline_name") ?? airlineNameFor(cfg.defaults.airline);
   const browser = createBrowser(cfg);
-  const prices = await fetchCabinPrices(browser, o.toUpperCase(), d.toUpperCase(), date, cabin, name);
+  let incomplete = "";
+  const prices = await fetchCabinPrices(browser, o.toUpperCase(), d.toUpperCase(), date, cabin, name, (why) => (incomplete = why));
   if (rest.includes("--json")) console.log(JSON.stringify(prices, null, 2));
   else console.log(prices.map((p) => `${p.departTime} → ${p.arriveTime}  ${p.stops} stop(s)  ${p.price}`).join("\n"));
+  if (incomplete) {
+    console.error(`INCOMPLETE: ${incomplete}`);
+    process.exitCode = 4;
+  }
 }
 
 async function cmdDecide(rest: string[], cfg: Config) {

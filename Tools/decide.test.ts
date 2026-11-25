@@ -261,6 +261,30 @@ describe("Google Flights per-cabin price rows", () => {
     expect(parseCabinPriceRows("<html><body>Sorry</body></html>")).toEqual([]);
   });
 
+  test("a failed 'View more flights' click is reported, not swallowed (live 2026-11-24)", async () => {
+    const { fetchCabinPrices } = await import("./cabin-prices.ts");
+    const row =
+      '<li aria-label="From 644 US dollars. Leaves O&#39;Hare International Airport at 7:25 AM and arrives at Denver International Airport at 9:05 AM. Nonstop flight. Select flight"></li>';
+    const page = `<button aria-label="View more flights"></button>${row}`;
+    const b: BrowserDriver = {
+      open: async () => 1,
+      read: async () => page,
+      click: async () => {
+        throw new Error("selector not found");
+      },
+      requests: () => 1,
+    };
+    const said: string[] = [];
+    const rows = await fetchCabinPrices(b, "ORD", "DEN", "2027-03-10", "first", "United", (w) => said.push(w));
+    expect(rows).toHaveLength(1);
+    expect(said).toHaveLength(1);
+    expect(said[0]).toContain("selector not found");
+    // And a page with nothing hidden says nothing.
+    const quiet: string[] = [];
+    await fetchCabinPrices({ ...b, read: async () => row }, "ORD", "DEN", "2027-03-10", "first", "United", (w) => quiet.push(w));
+    expect(quiet).toEqual([]);
+  });
+
   test("the q= URL names the cabin, except for economy", async () => {
     const { cabinPriceUrl } = await import("./cabin-prices.ts");
     expect(decodeURIComponent(cabinPriceUrl("ORD", "DEN", "2027-03-10", "first", "United"))).toContain("ORD to DEN on 2027-03-10 one way first class United");

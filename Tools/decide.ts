@@ -147,7 +147,9 @@ export async function decide(
   }
   for (const cabin of cabins.filter((c) => c !== "economy")) {
     try {
-      for (const p of await fetchCabinPrices(browser, origin, destination, date, cabin, opts.airlineName)) {
+      for (const p of await fetchCabinPrices(browser, origin, destination, date, cabin, opts.airlineName, (why) =>
+        failures.push({ source: `google-flights:${cabin}`, error: why }),
+      )) {
         setPrice(`${p.departTime}|${p.arriveTime}`, cabin, p.price);
       }
     } catch (e) {

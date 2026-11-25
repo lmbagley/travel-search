@@ -35,6 +35,8 @@ export async function fetchCabinPrices(
   isoDate: string,
   cabin: string,
   airlineName?: string,
+  /** Told when rows stayed hidden, so callers can name the gap instead of printing n/a. */
+  onIncomplete: (why: string) => void = () => {},
 ): Promise<CabinPrice[]> {
   const tab = await browser.open(cabinPriceUrl(origin, destination, isoDate, cabin, airlineName));
   let html = await browser.read(tab, (h) => /aria-label="[^"]*US dollars/.test(h) || /couldn(?:&#39;|')t find|No results/i.test(h), 60_000);
@@ -43,8 +45,9 @@ export async function fetchCabinPrices(
     try {
       await browser.click(tab, 'button[aria-label="View more flights"]');
       html = await browser.read(tab, (h) => !/aria-label="View more flights"/.test(h), 20_000);
-    } catch {
-      // Not fatal: parse what rendered. Anything left unpriced shows as n/a.
+    } catch (e) {
+      // Not fatal: parse what rendered, but say so; rows left hidden would otherwise read as "no price".
+      onIncomplete(`could not open "View more flights" (${e instanceof Error ? e.message : String(e)}); only the first rows were priced`);
     }
   }
   const rows = parseCabinPriceRows(html);
