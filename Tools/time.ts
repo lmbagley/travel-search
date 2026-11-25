@@ -2,16 +2,23 @@
  * time.ts — local clock times to real instants.
  *
  * Sources print local times. Durations and connections across time zones need each
- * airport's IANA zone, from `airport_tz` in your config. An airport with no zone gives
+ * airport's IANA zone: the built-in table of every IATA airport, overridden by `airport_tz` in
+ * your config. An airport with no zone in either gives
  * an undefined duration, which callers report; it is never guessed.
  */
 
 import type { Config } from "./painfulness.ts";
+import BUILT_IN_ZONES from "./data/airport-tz.json" with { type: "json" };
 
+/** IANA zone for every airport with an IATA code (mwgg/Airports, MIT; see data/README.md). */
+export const AIRPORT_ZONES: Readonly<Record<string, string>> = BUILT_IN_ZONES;
+
+/** The config's airport_tz wins (to correct or add an airport); otherwise the built-in table. */
 export function airportZone(cfg: Config, airport: string): string | undefined {
-  const z = cfg.airport_tz ?? {};
-  const v = z[airport];
-  return typeof v === "string" && v.trim() ? v : undefined;
+  const code = airport.trim().toUpperCase();
+  const v = (cfg.airport_tz ?? {})[code];
+  if (typeof v === "string" && v.trim()) return v.trim();
+  return AIRPORT_ZONES[code];
 }
 
 /** Epoch ms for a local date (YYYY-MM-DD) and time (HH:MM, 24h) in an IANA zone. */

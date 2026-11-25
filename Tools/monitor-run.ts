@@ -335,7 +335,7 @@ function departureInfoByKey(cfg: Config, mon: MonitorConfig): Map<string, Depart
     const key = watchKey(watch);
     const tz = airportZone(cfg, watch.origin);
     if (tz === undefined) {
-      out.set(key, { epochMs: Number.POSITIVE_INFINITY, error: `no airport_tz entry for ${watch.origin} in ${configPath()}` });
+      out.set(key, { epochMs: Number.POSITIVE_INFINITY, error: `no time zone known for ${watch.origin}; add it under airport_tz in ${configPath()}` });
       continue;
     }
     try {

@@ -297,7 +297,7 @@ export function toItinerary(cfg: Config, a: AvailItinerary, failures: SourceFail
   }
   const unknown = [...missingZones].filter((z) => !airportZone(cfg, z));
   if (unknown.length) {
-    const msg = `no airport_tz for ${unknown.join(", ")} — trip length and connections for ${keyOf(a)} are not measured`;
+    const msg = `no time zone known for ${unknown.join(", ")} (add it under airport_tz) — trip length and connections for ${keyOf(a)} are not measured`;
     if (!failures.some((f) => f.error === msg)) failures.push({ source: `${source}:time`, error: msg });
   }
   return {

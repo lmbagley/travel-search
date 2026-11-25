@@ -15,7 +15,7 @@ import type { Config, Itinerary } from "./painfulness.ts";
 import type { AvailItinerary, AvailSegment, BrowserDriver, SeatMapProvider, SeatMapRequest } from "./seatmap-api.ts";
 import type { LegSeatReality, SitableSeat } from "./seats.ts";
 import { CFG } from "./test-helpers.ts";
-import { addDays, minutesBetween, zonedEpoch } from "./time.ts";
+import { addDays, AIRPORT_ZONES, airportZone, minutesBetween, zonedEpoch } from "./time.ts";
 import { upgradeEstimate } from "./upgrade.ts";
 
 const TZ = { ORD: "America/Chicago", DEN: "America/Denver", SFO: "America/Los_Angeles", EWR: "America/New_York" };
@@ -217,13 +217,40 @@ describe("time", () => {
     expect(addDays("2027-02-28", 1)).toBe("2027-03-01");
   });
 
-  test("an airport with no zone is reported, and its trip length is left unmeasured", () => {
+  test("an airport with no zone anywhere is reported, and its trip length is left unmeasured", () => {
     const failures: SourceFailure[] = [];
-    const it = toItinerary({ ...cfg, airport_tz: { ORD: "America/Chicago" } }, ONESTOP, failures, "fake");
+    // QQX is not a real IATA code, so neither the built-in table nor the config knows it.
+    const viaUnknown: AvailItinerary = { segments: ONESTOP.segments.map((s, i) => (i === 0 ? { ...s, destination: "QQX" } : { ...s, origin: "QQX" })) };
+    const it = toItinerary(cfg, viaUnknown, failures, "fake");
     expect(it.measuredConnections).toBeUndefined();
-    expect(failures[0]!.error).toContain("no airport_tz for");
-    expect(failures[0]!.error).toContain("DEN");
-    expect(durationOf({ ...cfg, airport_tz: {} }, ONESTOP)).toBeUndefined();
+    expect(failures[0]!.error).toContain("no time zone known for QQX");
+    expect(durationOf(cfg, viaUnknown)).toBe(405); // ends are known: total time needs only those
+    const fromUnknown: AvailItinerary = { segments: [{ ...NONSTOP.segments[0]!, origin: "QQX" }] };
+    expect(durationOf(cfg, fromUnknown)).toBeUndefined();
+  });
+
+  test("the built-in table covers every airport the config does not, and the config wins", () => {
+    for (const [code, tz] of Object.entries({ DEN: "America/Denver", SLC: "America/Denver", PHX: "America/Phoenix", ANC: "America/Anchorage", HNL: "Pacific/Honolulu", KTM: "Asia/Kathmandu", AKL: "Pacific/Auckland" })) {
+      expect(airportZone({ ...cfg, airport_tz: {} }, code)).toBe(tz);
+    }
+    expect(airportZone({ ...cfg, airport_tz: { DEN: "America/Chicago" } }, "DEN")).toBe("America/Chicago");
+    expect(airportZone({ ...cfg, airport_tz: {} }, "den")).toBe("America/Denver");
+    expect(durationOf({ ...cfg, airport_tz: {} }, ONESTOP)).toBeGreaterThan(0);
+  });
+
+  test("the built-in table: every zone loads, and every UTC offset in use is covered", () => {
+    const codes = Object.keys(AIRPORT_ZONES);
+    expect(codes.length).toBeGreaterThan(7000);
+    expect(codes.every((c) => /^[A-Z]{3}$/.test(c))).toBe(true);
+    const offsets = new Set<string>();
+    for (const z of new Set(Object.values(AIRPORT_ZONES))) {
+      for (const d of [new Date("2027-01-15T12:00Z"), new Date("2027-07-15T12:00Z")]) {
+        offsets.add(new Intl.DateTimeFormat("en-US", { timeZone: z, timeZoneName: "longOffset" }).formatToParts(d).find((p) => p.type === "timeZoneName")!.value);
+      }
+    }
+    // Every offset with a scheduled airport, from -11 (Pago Pago) to +14 (Kiritimati), including the odd ones.
+    for (const o of ["GMT-11:00", "GMT-09:30", "GMT-03:30", "GMT+05:30", "GMT+05:45", "GMT+08:45", "GMT+12:45", "GMT+13:45", "GMT+14:00"]) expect(offsets).toContain(o);
+    expect(offsets.size).toBeGreaterThanOrEqual(39);
   });
 
   test("provider itineraries become ranking itineraries with measured connections and day offsets", () => {

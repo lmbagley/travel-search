@@ -76,13 +76,11 @@ seat_data:
   UA:
     "739": { exit_rows: [20, 21], extra_legroom_rows: [7, 8, 9, 20, 21], bulkhead_rows: [7], source: "EXAMPLE — replace" }
 
-# IANA time zone for each airport you fly through. Needed to measure trip length and
-# connections across zones; an airport missing here is reported, never guessed.
-airport_tz:
-  ORD: America/Chicago
-  DEN: America/Denver
-  SFO: America/Los_Angeles
-  EWR: America/New_York
+# Time zones for all 7,918 airports with an IATA code are built in (Tools/data/airport-tz.json).
+# List an airport here only to correct or add one; an airport with no zone anywhere is
+# reported, never guessed.
+airport_tz: {}
+#  XYZ: America/Denver
 
 # A rough upgrade estimate shown by 'decide': open premium seats plus premium fare-class
 # depth, discounted at elite-heavy hubs and scaled by your status. Opinions to tune.
