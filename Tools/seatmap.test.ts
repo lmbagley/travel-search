@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { acquireBrowserLock, htmlFromRead, lockPath } from "./browser.ts";
+import { acquireBrowserLock, htmlFromRead, lastRequestAt, lockPath, pacingWait, recordRequest } from "./browser.ts";
 import { assertProvider, checkAvailability, loadSeatMapProvider, seatMapSettings, SeatMapUnavailable } from "./seatmap.ts";
 import { SEATMAP_API_VERSION, type BrowserDriver } from "./seatmap-api.ts";
 import { CFG } from "./test-helpers.ts";
@@ -150,5 +150,41 @@ describe("the shared browser", () => {
       console.log("took it");`], { env: { ...process.env, XDG_STATE_HOME: dir } });
     expect(out.stdout.toString()).toContain("took it");
     expect(lockPath()).toContain("travel-search");
+  });
+});
+
+describe("pacing holds across separate runs", () => {
+  test("the wait never exceeds the gap, never goes negative, and is zero for a new site", () => {
+    const now = 1_000_000_000;
+    for (const gap of [0, 1000, 15_000, 25_000]) {
+      for (const ago of [0, 1, 500, 14_999, 15_000, 60_000, 10 ** 9]) {
+        const w = pacingWait(now - ago, gap, now);
+        expect(w).toBeGreaterThanOrEqual(0);
+        expect(w).toBeLessThanOrEqual(gap);
+        expect(w).toBe(Math.max(0, gap - ago)); // the paced gap minus time already passed
+      }
+      expect(pacingWait(0, gap, now)).toBe(0);
+    }
+    // A clock that moved backwards cannot make us wait longer than one gap.
+    expect(pacingWait(now + 3_600_000, 15_000, now)).toBe(15_000);
+  });
+
+  test("a request made by another process is seen by the next one, per site", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ts-pace-"));
+    const prev = process.env.XDG_STATE_HOME;
+    process.env.XDG_STATE_HOME = dir;
+    try {
+      const out = Bun.spawnSync(["bun", "-e", `
+        import { recordRequest } from "${join(import.meta.dir, "browser.ts")}";
+        recordRequest("seats.example", 12345);`], { env: { ...process.env, XDG_STATE_HOME: dir } });
+      expect(out.exitCode).toBe(0);
+      expect(lastRequestAt("seats.example")).toBe(12345);
+      expect(lastRequestAt("other.example")).toBe(0);
+      recordRequest("other.example", 777);
+      expect([lastRequestAt("seats.example"), lastRequestAt("other.example")]).toEqual([12345, 777]);
+    } finally {
+      if (prev === undefined) delete process.env.XDG_STATE_HOME;
+      else process.env.XDG_STATE_HOME = prev;
+    }
   });
 });

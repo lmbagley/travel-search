@@ -68,6 +68,39 @@ export function stateDir(): string {
   return join(xdg && xdg.trim() !== "" ? xdg : join(homedir(), ".local", "state"), "travel-search");
 }
 
+/** When each site was last opened, by any travel-search process. */
+export function pacingPath(): string {
+  return join(stateDir(), "last-request.json");
+}
+
+/** Last open time per host, shared across runs so back-to-back commands are paced too. */
+export function lastRequestAt(host: string): number {
+  try {
+    const v = (JSON.parse(readFileSync(pacingPath(), "utf8")) as Record<string, unknown>)[host];
+    return typeof v === "number" && Number.isFinite(v) ? v : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function recordRequest(host: string, at = Date.now()): void {
+  let all: Record<string, unknown> = {};
+  try {
+    all = JSON.parse(readFileSync(pacingPath(), "utf8"));
+  } catch {
+    /* first request, or an unreadable file: start over */
+  }
+  all[host] = at;
+  mkdirSync(stateDir(), { recursive: true });
+  writeFileSync(pacingPath(), JSON.stringify(all));
+}
+
+/** How long to wait before the next open of a host: the paced gap minus time already passed. */
+export function pacingWait(last: number, gapMs: number, now = Date.now()): number {
+  if (last <= 0) return 0;
+  return Math.max(0, Math.min(gapMs, last + gapMs - now));
+}
+
 export function lockPath(): string {
   return join(stateDir(), "browser.lock");
 }
@@ -146,15 +179,17 @@ export function createBrowser(cfg: Config): BrowserDriver {
     jitterMs: typeof sched.jitter_ms === "number" ? sched.jitter_ms : 1500,
   };
   let count = 0;
-  let lastAt = 0;
 
   return {
     async open(url, pacing = defaultPacing) {
       await acquireBrowserLock();
-      const wait = pacing.pacingMs + Math.floor(Math.random() * pacing.jitterMs);
-      const since = Date.now() - lastAt;
-      if (lastAt > 0 && since < wait) await sleep(wait - since);
-      lastAt = Date.now();
+      // Paced per site across every travel-search run, not just within this one: the lock
+      // makes runs serial, and the shared timestamp makes a new run wait out the last one.
+      const host = new URL(url).host;
+      const gap = pacing.pacingMs + Math.floor(Math.random() * pacing.jitterMs);
+      const wait = pacingWait(lastRequestAt(host), gap);
+      if (wait > 0) await sleep(wait);
+      recordRequest(host);
       count++;
       const out = await runDriver(cmd, ["open", url], 90_000);
       let tabId: unknown;
