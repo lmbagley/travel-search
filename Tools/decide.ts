@@ -163,20 +163,37 @@ export async function decide(
       .map((c) => ({ c, v: verdictFor.get(c.itin) }))
       .filter((x) => x.v && x.v.rejected.length === 0)
       .sort((a, b) => b.v!.score - a.v!.score);
-    const chosen = eligible.slice(0, opts.topN ?? sm.topN);
+    // Take itineraries in rank order while their legs fit under max_fetches. Hitting the
+    // cap after availability was already read must not throw that work away, and must
+    // never fetch past the cap; the cut is named below, so the run still exits incomplete.
+    const topN = opts.topN ?? sm.topN;
+    type Leg = { airline: string; flightNumber: string; origin: string; destination: string; date: string };
+    const legs = new Map<string, Leg>();
+    const chosen: typeof eligible = [];
+    let capped = false;
+    for (const x of eligible.slice(0, topN)) {
+      const mine = new Map<string, Leg>();
+      for (const s of x.c.avail.segments) {
+        if (s.flightNumber !== "?" && !legs.has(legKey(s))) {
+          mine.set(legKey(s), { airline: s.airline, flightNumber: s.flightNumber, origin: s.origin, destination: s.destination, date: s.departDate });
+        }
+      }
+      if ((legs.size + mine.size) * sm.cabins.length > sm.maxFetches) {
+        capped = true;
+        break;
+      }
+      for (const [k, v] of mine) legs.set(k, v);
+      chosen.push(x);
+    }
+    if (eligible.length && !chosen.length) {
+      throw new Error(`the best itinerary alone needs more than sources.seatmap.max_fetches (${sm.maxFetches}) seat-map fetches across ${sm.cabins.length} cabin(s); raise the cap on purpose`);
+    }
     if (eligible.length > chosen.length) {
+      const why = capped ? `max_fetches ${sm.maxFetches} with ${sm.cabins.length} cabin(s) per leg` : `top_n ${topN}`;
       failures.push({
         source: `${provider.name}:seatmaps`,
-        error: `seats fetched for the top ${chosen.length} of ${eligible.length} eligible itineraries (top_n); the rest show NO seat line because they were not fetched, not because they are full`,
+        error: `seats fetched for the top ${chosen.length} of ${eligible.length} eligible itineraries (${why}); the rest show NO seat line because they were not fetched, not because they are full`,
       });
-    }
-    const legs = new Map<string, { airline: string; flightNumber: string; origin: string; destination: string; date: string }>();
-    for (const { c } of chosen) {
-      for (const s of c.avail.segments) if (s.flightNumber !== "?") legs.set(legKey(s), { airline: s.airline, flightNumber: s.flightNumber, origin: s.origin, destination: s.destination, date: s.departDate });
-    }
-    const planned = legs.size * sm.cabins.length;
-    if (planned > sm.maxFetches) {
-      throw new Error(`planned ${planned} seat-map fetches is over sources.seatmap.max_fetches (${sm.maxFetches}); lower --top or raise the cap on purpose`);
     }
     for (const [k, leg] of legs) {
       for (const cabin of sm.cabins) {

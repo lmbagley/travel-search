@@ -94,11 +94,23 @@ describe("decide, end to end against a fake plug-in", () => {
     expect(upgradeEstimate({ ...cfg, upgrade_estimate: undefined }, NONSTOP, 0)).toBeUndefined();
   });
 
-  test("too many planned seat-map fetches stops before any fetch", async () => {
+  test("the fetch cap is never exceeded: itineraries are taken in rank order until it is, and the cut is named (live 2026-11-24)", async () => {
+    for (const cap of [4, 5, 6, 7, 8, 16]) {
+      const seen: SeatMapRequest[] = [];
+      const c: Config = { ...cfg, sources: { ...cfg.sources, seatmap: { enabled: true, module: "x", top_n: 5, max_fetches: cap } } };
+      const r = await decide(c, browser, fakeProvider(seen), "ORD", "SFO", "2027-03-10", { airlines: ["UA"], seatmaps: true });
+      expect(seen.length).toBeLessThanOrEqual(cap);
+      expect(seen.length).toBeGreaterThan(0);
+      const cut = r.failures.find((f) => f.error.includes("not fetched"));
+      if (cut) expect(cut.error).toMatch(/max_fetches|top_n/);
+    }
+  });
+
+  test("when even the best itinerary needs more fetches than the cap, nothing is fetched", async () => {
     const seen: SeatMapRequest[] = [];
-    const tight: Config = { ...cfg, sources: { ...cfg.sources, seatmap: { enabled: true, module: "x", top_n: 5, max_fetches: 3 } } };
+    const tight: Config = { ...cfg, sources: { ...cfg.sources, seatmap: { enabled: true, module: "x", top_n: 5, max_fetches: 1 } } };
     const err = await decide(tight, browser, fakeProvider(seen), "ORD", "SFO", "2027-03-10", { airlines: ["UA"], seatmaps: true }).catch((e) => e);
-    expect(String(err.message)).toContain("max_fetches");
+    expect(String(err?.message)).toContain("max_fetches");
     expect(seen).toHaveLength(0);
   });
 
